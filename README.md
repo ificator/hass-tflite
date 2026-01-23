@@ -1,11 +1,11 @@
 # Home Assistant Add-on: TFLite Server
 
-A Home Assistant add-on that runs a Python FastAPI server to manage TensorFlow Lite models and invoke them via HTTP.
+A Home Assistant add-on that runs a Python FastAPI server to run TensorFlow Lite model inference via HTTP.
 
 ## Features
-- ✅ CRUD model files stored in `/data/models`
-- ✅ SHA1 hash exposed on read (JSON metadata)
-- ✅ Invoke API to run inference with TFLite runtime (fallback echoes input if runtime unavailable)
+- Upload model files to `/data/models`
+- Invoke API to run inference with TFLite runtime
+- Interpreter caching for faster repeated invocations
 
 ## Installation
 1. Copy this repository into your Home Assistant add-ons folder as `/addons/tflite_server` (or add this repo as a custom add-on repository).
@@ -19,12 +19,13 @@ Base URL (internal): `http://local-tflite-server:8000`
 ```http
 GET /health
 ```
+Returns `{"status": "ok"}`.
 
-### Models
-- **List**: `GET /models`
-- **Upload/Update**: `PUT /models/{name}` (binary body or multipart)
-- **Read metadata**: `GET /models/{name}` (JSON with sha1)
-- **Delete**: `DELETE /models/{name}`
+### Upload Model
+```http
+PUT /models/{name}
+```
+Upload a model file (binary body or multipart). Returns `{"name": "...", "size": ...}`.
 
 ### Invoke
 ```http
@@ -32,14 +33,16 @@ POST /invoke
 Content-Type: application/json
 {
   "model": "model.tflite",
-  "input": [[...]]  // or use "inputs": [{"index":0, "data":..., "dtype":"float32"}]
+  "input": [[...]]
 }
 ```
+For multiple inputs, use `"inputs": [{"index": 0, "data": ..., "dtype": "float32"}, ...]` instead of `"input"`.
+
 Response:
 ```json
 {
   "outputs": [
-    {"index": 0, "data": [...], "dtype": "float32", "shape": [..]}
+    {"index": 0, "data": [...], "dtype": "float32", "shape": [...]}
   ]
 }
 ```
@@ -52,9 +55,6 @@ tflite_model=model.tflite
 # Upload model
 curl -X PUT --data-binary @${tflite_model} ${BASE}/models/${tflite_model}
 
-# List models
-curl ${BASE}/models
-
 # Invoke (single input)
 curl -X POST ${BASE}/invoke \
   -H 'Content-Type: application/json' \
@@ -63,8 +63,7 @@ curl -X POST ${BASE}/invoke \
 
 ## Notes
 - Models are stored under `/data/models` (persistent across add-on restarts).
-- TFLite runtime is attempted via `tflite-runtime`; if unavailable, the server echoes inputs.
-- Interpreter caching is used per model to speed up repeated invocations.
+- Interpreters are cached per model (up to 3) to speed up repeated invocations.
 - **Inputs must already match the model's expected shapes** (no reshaping or broadcasting performed).
 
 ## Development
