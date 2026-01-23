@@ -10,7 +10,5 @@
   "map": ["config", "ssl", "share", "backup", "media", "data"],
   "options": {},
   "schema": {},
-  "hassio_api": true,
-  "ingress": true,
-  "ingress_port": 8000
+  "hassio_api": true
 }
