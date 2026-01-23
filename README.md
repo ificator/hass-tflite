@@ -29,7 +29,6 @@ GET /health
 ### Invoke
 ```http
 POST /invoke
-Authorization: Bearer ${SUPERVISOR_TOKEN}
 Content-Type: application/json
 {
   "model": "model.tflite",
@@ -47,19 +46,17 @@ Response:
 
 ## Examples
 ```bash
-AUTH="Authorization: Bearer ${SUPERVISOR_TOKEN}"
 BASE=http://local-tflite-server:8000
 tflite_model=model.tflite
 
 # Upload model
-curl -X PUT --data-binary @${tflite_model} -H "$AUTH" ${BASE}/models/${tflite_model}
+curl -X PUT --data-binary @${tflite_model} ${BASE}/models/${tflite_model}
 
 # List models
-curl -H "$AUTH" ${BASE}/models
+curl ${BASE}/models
 
 # Invoke (single input)
 curl -X POST ${BASE}/invoke \
-  -H "$AUTH" \
   -H 'Content-Type: application/json' \
   -d '{"model":"'${tflite_model}'","input":[[1,2],[3,4]]}'
 ```
@@ -69,15 +66,20 @@ curl -X POST ${BASE}/invoke \
 - TFLite runtime is attempted via `tflite-runtime`; if unavailable, the server echoes inputs.
 - Interpreter caching is used per model to speed up repeated invocations.
 - **Inputs must already match the model's expected shapes** (no reshaping or broadcasting performed).
-- **Auth**: Requires `Authorization: Bearer ${SUPERVISOR_TOKEN}` (set `REQUIRE_SUPERVISOR_TOKEN=0` to disable for dev).
 
 ## Development
 ```bash
-# Run locally (for testing)
-cd rootfs/opt/app
-python -m venv .venv && . .venv/Scripts/activate  # on Windows
-pip install -r requirements.txt
-uvicorn main:app --reload
+# Build image
+docker build -t hass-tflite .
+
+# Run for validation (exposes port 8000 on host)
+docker run --rm -p 8000:8000 -v $PWD/tmp-data:/data hass-tflite
+
+# Windows PowerShell volume path
+docker run --rm -p 8000:8000 -v ${PWD}\tmp-data:/data hass-tflite
+
+# Test
+curl http://localhost:8000/health
 ```
 
 ## License

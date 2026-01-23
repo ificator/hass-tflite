@@ -7,13 +7,7 @@
   "startup": "services",
   "boot": "auto",
   "arch": ["aarch64", "amd64", "armv7", "armhf", "i386"],
-  "ports": {},
-  "ports_description": {},
-  "ingress": false,
-  "panel_admin": false,
   "map": ["config", "ssl", "share", "backup", "media", "data"],
   "options": {},
-  "schema": {},
-  "hassio_api": true,
-  "homeassistant_api": false
+  "schema": {}
 }
