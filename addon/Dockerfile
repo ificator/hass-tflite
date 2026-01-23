@@ -1,5 +1,4 @@
-ARG BUILD_FROM=python:3.11-slim
-FROM ${BUILD_FROM}
+FROM python:3.11-slim
 
 ENV LANG=C.UTF-8 \
     PYTHONUNBUFFERED=1
