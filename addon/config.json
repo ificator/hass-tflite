@@ -11,5 +11,6 @@
   "options": {},
   "schema": {},
   "hassio_api": true,
-  "host_network": true
+  "ingress": true,
+  "ingress_port": 8000
 }
