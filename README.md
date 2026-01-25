@@ -3,7 +3,7 @@
 A Home Assistant add-on that runs a Python FastAPI server to run TensorFlow Lite model inference via HTTP.
 
 ## Features
-- Upload model files to `/data/models`
+- Load TFLite models from `/config/tensor_models`
 - Invoke API to run inference with TFLite runtime
 - Interpreter caching for faster repeated invocations
 
@@ -20,12 +20,6 @@ Base URL (internal): `http://local-tflite-server:8000`
 GET /health
 ```
 Returns `{"status": "ok"}`.
-
-### Upload Model
-```http
-PUT /models/{name}
-```
-Upload a model file (binary body or multipart). Returns `{"name": "...", "size": ...}`.
 
 ### Invoke
 ```http
@@ -50,19 +44,15 @@ Response:
 ## Examples
 ```bash
 BASE=http://local-tflite-server:8000
-tflite_model=model.tflite
-
-# Upload model
-curl -X PUT --data-binary @${tflite_model} ${BASE}/models/${tflite_model}
 
 # Invoke (single input)
 curl -X POST ${BASE}/invoke \
   -H 'Content-Type: application/json' \
-  -d '{"model":"'${tflite_model}'","input":[[1,2],[3,4]]}'
+  -d '{"model":"model.tflite","input":[[1,2],[3,4]]}'
 ```
 
 ## Notes
-- Models are stored under `/data/models` (persistent across add-on restarts).
+- Models are read from `/config/tensor_models`. Place your `.tflite` model files in this folder within your Home Assistant config directory.
 - Interpreters are cached per model (up to 3) to speed up repeated invocations.
 - **Inputs must already match the model's expected shapes** (no reshaping or broadcasting performed).
 
@@ -72,10 +62,11 @@ curl -X POST ${BASE}/invoke \
 docker build -t hass-tflite .
 
 # Run for validation (exposes port 8000 on host)
-docker run --rm -p 8000:8000 -v $PWD/tmp-data:/data hass-tflite
+# Note: /config must be mapped as the add-on reads models from /config/tensor_models
+docker run --rm -p 8000:8000 -v $PWD/tmp-config:/config hass-tflite
 
 # Windows PowerShell volume path
-docker run --rm -p 8000:8000 -v ${PWD}\tmp-data:/data hass-tflite
+docker run --rm -p 8000:8000 -v ${PWD}\tmp-config:/config hass-tflite
 
 # Test
 curl http://localhost:8000/health

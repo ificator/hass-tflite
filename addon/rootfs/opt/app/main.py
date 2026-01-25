@@ -3,7 +3,7 @@ import numpy as np
 import tflite_runtime.interpreter as tflite
 import threading
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, HTTPException
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
@@ -11,8 +11,7 @@ from typing import Any, Dict, List, Optional
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s")
 logger = logging.getLogger("tflite-server")
 
-MODEL_DIR = Path("/data/models").resolve()
-MODEL_DIR.mkdir(parents=True, exist_ok=True)
+MODEL_DIR = Path("/config/tensor_models").resolve()
 
 app = FastAPI(title="TFLite Server", version="0.1.0")
 
@@ -86,27 +85,6 @@ def invoke(req: InvokeRequest):
                 )
             )
     return {"outputs": [o.dict() for o in outputs]}
-
-@app.put("/models/{model_name}", response_model=Dict[str, Any])
-async def put_model(model_name: str, request: Request, file: UploadFile = File(default=None)):
-    path = _safe_model_path(model_name)
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    if file is not None:
-        content = await file.read()
-    else:
-        content = await request.body()
-
-    if not content:
-        raise HTTPException(status_code=400, detail="Empty model file")
-
-    with _INTERPRETERS_LOCK:
-        _INTERPRETERS.pop(path, None)
-
-    with path.open("wb") as f:
-        f.write(content)
-
-    return {"name": path.name, "size": path.stat().st_size}
 
 # Private helper functions (alphabetical)
 

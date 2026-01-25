@@ -1,13 +1,13 @@
 {
   "name": "TFLite Server",
   "slug": "tflite_server",
-  "version": "0.1.0",
-  "description": "A Python web server for CRUD TFLite models and invoke API",
+  "version": "0.2.0",
+  "description": "A Python web server for TFLite model inference",
   "url": "https://github.com/ificator/hass-tflite",
   "startup": "services",
   "boot": "auto",
   "arch": ["aarch64", "amd64", "armv7", "armhf", "i386"],
-  "map": ["config", "ssl", "share", "backup", "media", "data"],
+  "map": ["config"],
   "options": {},
   "schema": {},
   "hassio_api": true
