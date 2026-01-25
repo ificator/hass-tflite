@@ -21,6 +21,24 @@ GET /health
 ```
 Returns `{"status": "ok"}`.
 
+### Initialize
+```http
+POST /initialize
+Content-Type: application/json
+{
+  "model": "model.tflite"
+}
+```
+Pre-loads a model into memory to avoid latency on the first `/invoke` call. Returns model metadata:
+```json
+{
+  "model": "model.tflite",
+  "inputs": [{"index": 0, "shape": [1, 224, 224, 3], "dtype": "float32"}],
+  "outputs": [{"index": 0, "shape": [1, 1000], "dtype": "float32"}]
+}
+```
+This is optional - models are automatically loaded on first invoke if not pre-initialized.
+
 ### Invoke
 ```http
 POST /invoke
@@ -44,6 +62,11 @@ Response:
 ## Examples
 ```bash
 BASE=http://local-tflite-server:8000
+
+# Pre-load model (optional, useful at startup)
+curl -X POST ${BASE}/initialize \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"model.tflite"}'
 
 # Invoke (single input)
 curl -X POST ${BASE}/invoke \

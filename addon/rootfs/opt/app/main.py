@@ -26,6 +26,9 @@ class InvokeOutput(BaseModel):
     dtype: str
     shape: List[int]
 
+class InitializeRequest(BaseModel):
+    model: str = Field(..., description="Model filename")
+
 class InvokeRequest(BaseModel):
     model: str = Field(..., description="Model filename")
     input: Optional[Any] = Field(default=None, description="Single input tensor data")
@@ -38,6 +41,29 @@ _MAX_CACHE_SIZE = 3
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/initialize", response_model=Dict[str, Any])
+def initialize(req: InitializeRequest):
+    """Pre-load a model into the cache to avoid latency on first invoke."""
+    if tflite is None:
+        raise HTTPException(status_code=500, detail="tflite runtime not available")
+
+    path = _safe_model_path(req.model)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    interpreter, _ = _ensure_interpreter(path)
+    if interpreter is None:
+        raise HTTPException(status_code=500, detail="Failed to load interpreter")
+
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    return {
+        "model": req.model,
+        "inputs": [{"index": d["index"], "shape": d["shape"].tolist(), "dtype": str(d["dtype"])} for d in input_details],
+        "outputs": [{"index": d["index"], "shape": d["shape"].tolist(), "dtype": str(d["dtype"])} for d in output_details],
+    }
 
 @app.post("/invoke", response_model=Dict[str, Any])
 def invoke(req: InvokeRequest):
