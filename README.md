@@ -95,6 +95,36 @@ curl -X POST ${BASE}/invoke \
 
 ## Development
 
+### Using the Home Assistant Devcontainer (Recommended)
+
+This repository includes a VS Code devcontainer configuration that provides a full Home Assistant Supervisor environment for add-on development.
+
+**Prerequisites:**
+- [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- [Docker](https://www.docker.com/)
+
+**Getting Started:**
+
+1. Open the repository folder in VS Code
+2. When prompted "Reopen in Container", click **Reopen in Container** (or use the command palette: `Dev Containers: Reopen in Container`)
+3. Wait for the container to build and start
+4. Once inside the devcontainer, Home Assistant will be available at `http://localhost:7123`
+
+**Developing the Add-on:**
+
+- The add-on source is mounted at `/mnt/supervisor/addons/local/hass-tflite`
+- Install the add-on from the Home Assistant UI: **Settings → Add-ons → Add-on Store → Local add-ons** (click the refresh button if needed)
+- After making code changes, rebuild the add-on from the Add-on info page
+- View add-on logs in the Home Assistant UI for debugging
+
+**Port Mappings:**
+| Host Port | Container Port | Service |
+|-----------|----------------|---------|
+| 7123      | 8123           | Home Assistant UI |
+| 7357      | 4357           | Observer |
+
+### Manual Docker Build
+
 ```bash
 # Build image
 docker build -t hass-tflite .
