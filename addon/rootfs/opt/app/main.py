@@ -3,7 +3,7 @@ import numpy as np
 import tflite_runtime.interpreter as tflite
 import threading
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, HTTPException
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
@@ -11,8 +11,7 @@ from typing import Any, Dict, List, Optional
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s")
 logger = logging.getLogger("tflite-server")
 
-MODEL_DIR = Path("/data/models").resolve()
-MODEL_DIR.mkdir(parents=True, exist_ok=True)
+MODEL_DIR = Path("/config/tensor_models").resolve()
 
 app = FastAPI(title="TFLite Server", version="0.1.0")
 
@@ -27,6 +26,9 @@ class InvokeOutput(BaseModel):
     dtype: str
     shape: List[int]
 
+class InitializeRequest(BaseModel):
+    model: str = Field(..., description="Model filename")
+
 class InvokeRequest(BaseModel):
     model: str = Field(..., description="Model filename")
     input: Optional[Any] = Field(default=None, description="Single input tensor data")
@@ -39,6 +41,29 @@ _MAX_CACHE_SIZE = 3
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/initialize", response_model=Dict[str, Any])
+def initialize(req: InitializeRequest):
+    """Pre-load a model into the cache to avoid latency on first invoke."""
+    if tflite is None:
+        raise HTTPException(status_code=500, detail="tflite runtime not available")
+
+    path = _safe_model_path(req.model)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    interpreter, _ = _ensure_interpreter(path)
+    if interpreter is None:
+        raise HTTPException(status_code=500, detail="Failed to load interpreter")
+
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    return {
+        "model": req.model,
+        "inputs": [{"index": d["index"], "shape": d["shape"].tolist(), "dtype": str(d["dtype"])} for d in input_details],
+        "outputs": [{"index": d["index"], "shape": d["shape"].tolist(), "dtype": str(d["dtype"])} for d in output_details],
+    }
 
 @app.post("/invoke", response_model=Dict[str, Any])
 def invoke(req: InvokeRequest):
@@ -86,27 +111,6 @@ def invoke(req: InvokeRequest):
                 )
             )
     return {"outputs": [o.dict() for o in outputs]}
-
-@app.put("/models/{model_name}", response_model=Dict[str, Any])
-async def put_model(model_name: str, request: Request, file: UploadFile = File(default=None)):
-    path = _safe_model_path(model_name)
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    if file is not None:
-        content = await file.read()
-    else:
-        content = await request.body()
-
-    if not content:
-        raise HTTPException(status_code=400, detail="Empty model file")
-
-    with _INTERPRETERS_LOCK:
-        _INTERPRETERS.pop(path, None)
-
-    with path.open("wb") as f:
-        f.write(content)
-
-    return {"name": path.name, "size": path.stat().st_size}
 
 # Private helper functions (alphabetical)
 
