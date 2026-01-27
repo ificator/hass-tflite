@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TFLite Server</title>
+    <link rel="stylesheet" href="ui/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TFLite Server</h1>
+            <div id="health-status" class="status status-unknown">
+                <span class="status-dot"></span>
+                <span class="status-text">Checking...</span>
+            </div>
+        </header>
+
+        <section class="card">
+            <h2>Upload Model</h2>
+            <form id="upload-form">
+                <div class="form-group">
+                    <label for="model-file">Select .tflite file:</label>
+                    <input type="file" id="model-file" accept=".tflite" required>
+                </div>
+                <div class="form-group">
+                    <label for="model-name">Model name (optional):</label>
+                    <input type="text" id="model-name" placeholder="Leave empty to use filename">
+                </div>
+                <button type="submit" id="upload-btn">Upload Model</button>
+            </form>
+            <div id="upload-status" class="message hidden"></div>
+        </section>
+
+        <section class="card">
+            <h2>Installed Models</h2>
+            <div id="models-loading" class="loading">Loading models...</div>
+            <div id="models-empty" class="empty-state hidden">No models installed</div>
+            <ul id="models-list" class="models-list hidden"></ul>
+        </section>
+    </div>
+
+    <script src="ui/static/app.js"></script>
+</body>
+</html>

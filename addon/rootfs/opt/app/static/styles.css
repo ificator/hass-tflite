@@ -1,0 +1,220 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #ddd;
+}
+
+h1 {
+    font-size: 24px;
+    color: #03a9f4;
+}
+
+h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #444;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Status indicator */
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #999;
+}
+
+.status-ok .status-dot {
+    background-color: #4caf50;
+}
+
+.status-error .status-dot {
+    background-color: #f44336;
+}
+
+.status-unknown .status-dot {
+    background-color: #ff9800;
+}
+
+/* Form styles */
+.form-group {
+    margin-bottom: 16px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+input[type="text"],
+input[type="file"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+input[type="file"] {
+    padding: 8px;
+    background: #fafafa;
+}
+
+button {
+    background-color: #03a9f4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0288d1;
+}
+
+button:disabled {
+    background-color: #b0bec5;
+    cursor: not-allowed;
+}
+
+/* Models list */
+.models-list {
+    list-style: none;
+}
+
+.model-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.model-item:last-child {
+    border-bottom: none;
+}
+
+.model-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.model-name {
+    font-weight: 500;
+}
+
+.model-size {
+    font-size: 12px;
+    color: #666;
+}
+
+.model-hash {
+    font-size: 11px;
+    color: #888;
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Messages */
+.message {
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.message-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.message-error {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+.loading,
+.empty-state {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 12px;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .model-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .delete-btn {
+        align-self: flex-end;
+    }
+}
