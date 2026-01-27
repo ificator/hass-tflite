@@ -4,9 +4,10 @@ A Home Assistant add-on that runs a Python FastAPI server to run TensorFlow Lite
 
 ## Features
 
-- Load TFLite models from `/config/tensor_models`
+- Load TFLite models from `/config/models`
 - Invoke API to run inference with TFLite runtime
 - Interpreter caching for faster repeated invocations
+- Web UI for model management
 
 ## Installation
 
@@ -21,7 +22,7 @@ Base URL (internal): `http://local-tflite-server:8000`
 ### Health
 
 ```http
-GET /health
+GET /api/health
 ```
 
 Returns `{"status": "ok"}`.
@@ -29,7 +30,7 @@ Returns `{"status": "ok"}`.
 ### Initialize
 
 ```http
-POST /initialize
+POST /api/initialize
 Content-Type: application/json
 {
   "model": "model.tflite"
@@ -51,7 +52,7 @@ This is optional - models are automatically loaded on first invoke if not pre-in
 ### Invoke
 
 ```http
-POST /invoke
+POST /api/invoke
 Content-Type: application/json
 {
   "model": "model.tflite",
@@ -71,25 +72,46 @@ Response:
 }
 ```
 
+## Web UI
+
+The add-on includes a web interface for managing models. Access it from the add-on's info page in Home Assistant by clicking **Open Web UI**.
+
+### Uploading a Model
+
+1. Open the Web UI from the add-on's info page
+2. In the **Upload Model** section, click the file input and select a `.tflite` file
+3. Optionally enter a custom model name (the original filename is used if left empty)
+4. Click **Upload Model**
+
+The uploaded model will appear in the **Installed Models** list and can be used immediately with the `/api/invoke` endpoint.
+
+### Managing Models
+
+The **Installed Models** section displays all models in the `models` directory with their:
+- Filename
+- File size
+- SHA256 hash (for verification)
+
+To delete a model, click the **Delete** button next to it.
+
 ## Examples
 
 ```bash
 BASE=http://local-tflite-server:8000
 
 # Pre-load model (optional, useful at startup)
-curl -X POST ${BASE}/initialize \
+curl -X POST ${BASE}/api/initialize \
   -H 'Content-Type: application/json' \
   -d '{"model":"model.tflite"}'
 
 # Invoke (single input)
-curl -X POST ${BASE}/invoke \
+curl -X POST ${BASE}/api/invoke \
   -H 'Content-Type: application/json' \
   -d '{"model":"model.tflite","input":[[1,2],[3,4]]}'
 ```
 
 ## Notes
 
-- Models are read from `/config/tensor_models`. Place your `.tflite` model files in this folder within your Home Assistant config directory.
 - Interpreters are cached per model (up to 3) to speed up repeated invocations.
 - **Inputs must already match the model's expected shapes** (no reshaping or broadcasting performed).
 
