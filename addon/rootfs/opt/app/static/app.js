@@ -60,6 +60,7 @@ async function loadModels() {
                     <div class="model-info">
                         <span class="model-name">${escapeHtml(model.name)}</span>
                         <span class="model-size">${formatSize(model.size)}</span>
+                        <span class="model-hash">${escapeHtml(model.sha256)}</span>
                     </div>
                     <button class="delete-btn" data-model="${escapeHtml(model.name)}">Delete</button>
                 `;

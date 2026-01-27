@@ -149,6 +149,13 @@ button:disabled {
     color: #666;
 }
 
+.model-hash {
+    font-size: 11px;
+    color: #888;
+    font-family: monospace;
+    word-break: break-all;
+}
+
 .delete-btn {
     background-color: #f44336;
     padding: 6px 12px;

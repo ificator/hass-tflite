@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import numpy as np
 import tflite_runtime.interpreter as tflite
@@ -132,6 +133,7 @@ def list_models():
         models.append({
             "name": path.name,
             "size": stat.st_size,
+            "sha256": _compute_sha256(path),
         })
     return sorted(models, key=lambda m: m["name"])
 
@@ -178,6 +180,14 @@ def ui():
     return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
 
 # Private helper functions (alphabetical)
+
+def _compute_sha256(path: Path) -> str:
+    """Compute SHA256 hash of a file."""
+    sha256 = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
 
 def _ensure_interpreter(path: Path):
     if tflite is None:
