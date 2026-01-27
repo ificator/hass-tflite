@@ -4,6 +4,8 @@ import tflite_runtime.interpreter as tflite
 import threading
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
@@ -14,7 +16,12 @@ logger = logging.getLogger("tflite-server")
 MODEL_DIR = Path("/config/models").resolve()
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
+STATIC_DIR = Path(__file__).parent / "static"
+
 app = FastAPI(title="TFLite Server", version="0.1.0")
+
+# Mount static files for UI assets
+app.mount("/ui/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 class InvokeInput(BaseModel):
     index: Optional[int] = Field(default=None, description="Input tensor index")
@@ -40,10 +47,12 @@ _INTERPRETERS_LOCK = threading.Lock()
 _MAX_CACHE_SIZE = 3
 
 @app.get("/health")
+@app.get("/api/health")
 def health():
     return {"status": "ok"}
 
 @app.post("/initialize", response_model=Dict[str, Any])
+@app.post("/api/initialize", response_model=Dict[str, Any])
 def initialize(req: InitializeRequest):
     """Pre-load a model into the cache to avoid latency on first invoke."""
     if tflite is None:
@@ -67,6 +76,7 @@ def initialize(req: InitializeRequest):
     }
 
 @app.post("/invoke", response_model=Dict[str, Any])
+@app.post("/api/invoke", response_model=Dict[str, Any])
 def invoke(req: InvokeRequest):
     if tflite is None:
         raise HTTPException(status_code=500, detail="tflite runtime not available")
@@ -113,8 +123,22 @@ def invoke(req: InvokeRequest):
             )
     return {"outputs": [o.dict() for o in outputs]}
 
+@app.get("/api/models", response_model=List[Dict[str, Any]])
+def list_models():
+    """List all installed models."""
+    models = []
+    for path in MODEL_DIR.glob("*.tflite"):
+        stat = path.stat()
+        models.append({
+            "name": path.name,
+            "size": stat.st_size,
+        })
+    return sorted(models, key=lambda m: m["name"])
+
 @app.put("/models/{model_name}", response_model=Dict[str, Any])
-async def put_model(model_name: str, request: Request, file: UploadFile = File(default=None)):
+@app.put("/api/models/{model_name}", response_model=Dict[str, Any])
+async def put_model_api(model_name: str, request: Request, file: UploadFile = File(default=None)):
+    """Upload a model file."""
     path = _safe_model_path(model_name)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -133,6 +157,25 @@ async def put_model(model_name: str, request: Request, file: UploadFile = File(d
         f.write(content)
 
     return {"name": path.name, "size": path.stat().st_size}
+
+@app.delete("/api/models/{model_name}", response_model=Dict[str, Any])
+def delete_model(model_name: str):
+    """Delete a model file."""
+    path = _safe_model_path(model_name)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    # Remove from cache if present
+    with _INTERPRETERS_LOCK:
+        _INTERPRETERS.pop(path, None)
+
+    path.unlink()
+    return {"name": model_name, "deleted": True}
+
+@app.get("/ui")
+def ui():
+    """Serve the main UI page."""
+    return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
 
 # Private helper functions (alphabetical)
 
