@@ -1,7 +1,7 @@
 {
   "name": "TFLite Server",
   "slug": "tflite_server",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A Python web server for TFLite model inference",
   "url": "https://github.com/ificator/hass-tflite",
   "startup": "services",
