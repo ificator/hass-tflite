@@ -17,6 +17,32 @@
         </header>
 
         <section class="card">
+            <h2>Server Info</h2>
+            <div id="stats-grid" class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Uptime</span>
+                    <span class="stat-value" id="stat-uptime">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Memory (RSS)</span>
+                    <span class="stat-value" id="stat-memory">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">CPU Usage</span>
+                    <span class="stat-value" id="stat-cpu">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Inferences</span>
+                    <span class="stat-value" id="stat-invokes">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Cached Models</span>
+                    <span class="stat-value" id="stat-cached">—</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
             <h2>Upload Model</h2>
             <form id="upload-form">
                 <div class="form-group">

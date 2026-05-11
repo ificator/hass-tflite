@@ -1,20 +1,30 @@
-FROM python:3.11-slim
+# -- Build stage --------------------------------------------------------------
+FROM rust:1-slim-bookworm AS builder
 
-ENV LANG=C.UTF-8 \
-    PYTHONUNBUFFERED=1
+WORKDIR /build
 
-# Copy filesystem
-COPY rootfs/ /
+# Cache dependency compilation
+COPY rootfs/opt/app/Cargo.toml ./
+RUN mkdir src && echo 'fn main() {}' > src/main.rs \
+    && cargo build --release \
+    && rm -rf src target/release/.fingerprint/tflite-server-*
 
-WORKDIR /opt/app
+# Build actual source
+COPY rootfs/opt/app/src/ src/
+RUN cargo build --release
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r /opt/app/requirements.txt
+# -- Runtime stage ------------------------------------------------------------
+FROM debian:bookworm-slim
+
+COPY --from=builder /build/target/release/tflite-server /usr/local/bin/tflite-server
+
+# Copy service script and static assets (no Rust source needed at runtime)
+COPY rootfs/etc/ /etc/
+COPY rootfs/opt/app/static/ /opt/app/static/
+
+RUN chmod +x /etc/services.d/server/run
 
 EXPOSE 8000
 
-# Ensure service script is executable
-RUN chmod +x /etc/services.d/server/run
-
 # Default command for local runs (HA builder overrides entrypoint/init)
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/usr/local/bin/tflite-server"]

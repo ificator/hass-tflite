@@ -46,6 +46,36 @@ h2 {
 }
 
 /* Status indicator */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Status indicator */
 .status {
     display: flex;
     align-items: center;
