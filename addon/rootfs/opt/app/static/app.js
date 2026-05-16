@@ -19,6 +19,45 @@ function formatSize(bytes) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+// Format uptime
+function formatUptime(seconds) {
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+// Fetch and display server stats
+async function loadStats() {
+    try {
+        const response = await fetch(`${API_BASE}/stats`);
+        if (!response.ok) return;
+        const data = await response.json();
+
+        document.getElementById('stat-uptime').textContent =
+            formatUptime(data.uptime_seconds);
+        document.getElementById('stat-invokes').textContent =
+            data.invoke_count.toLocaleString();
+        document.getElementById('stat-cached').textContent =
+            data.cached_models;
+
+        if (data.memory_rss_bytes !== undefined) {
+            document.getElementById('stat-memory').textContent =
+                formatSize(data.memory_rss_bytes);
+        }
+        if (data.cpu_percent !== undefined) {
+            document.getElementById('stat-cpu').textContent =
+                data.cpu_percent.toFixed(1) + '%';
+        }
+    } catch (e) {
+        // ignore – stats are best-effort
+    }
+}
+
 // Check server health
 async function checkHealth() {
     try {
@@ -170,6 +209,8 @@ modelsList.addEventListener('click', async (e) => {
 // Initial load
 checkHealth();
 loadModels();
+loadStats();
 
-// Periodically check health
+// Periodically check health and stats
 setInterval(checkHealth, 30000);
+setInterval(loadStats, 5000);

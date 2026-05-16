@@ -1,6 +1,6 @@
 # Home Assistant Add-on: TFLite Server
 
-A Home Assistant add-on that runs a Python FastAPI server to run TensorFlow Lite model inference via HTTP.
+A Home Assistant add-on that runs a Rust server to run TensorFlow Lite model inference via HTTP.
 
 ## Features
 
@@ -148,11 +148,11 @@ This repository includes a VS Code devcontainer configuration that provides a fu
 ### Manual Docker Build
 
 ```bash
-# Build image
-docker build -t hass-tflite .
+# Build image (multi-stage: compiles Rust binary then copies into slim runtime)
+docker build -t hass-tflite addon/
 
 # Run for validation (exposes port 8000 on host)
-# Note: /config must be mapped as the add-on reads models from /config/tensor_models
+# Note: /config must be mapped as the add-on reads models from /config/models
 docker run --rm -p 8000:8000 -v $PWD/tmp-config:/config hass-tflite
 
 # Windows PowerShell volume path
